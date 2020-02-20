@@ -2,7 +2,7 @@
 
 namespace DataScriptr.Models.Database
 {
-    public class DatabaseDevelopmentModel
+    public class DataScriptrModel
     {
         public DataTable CurrentDataTable { get; set; }
     }

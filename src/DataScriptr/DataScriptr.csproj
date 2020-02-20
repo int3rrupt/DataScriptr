@@ -154,16 +154,16 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Views\DatabaseDevelopmentTool.ico" />
+    <Resource Include="Views\DataScriptr.ico" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Models\EditScript\" />
     <Folder Include="ValueConverters\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DatabaseDevelopment\DatabaseDevelopment.csproj">
-      <Project>{d9c48c18-51d4-4396-a6ba-64940ff2f9ff}</Project>
-      <Name>DatabaseDevelopment</Name>
+    <ProjectReference Include="..\DataScriptr.Library\DataScriptr.Library.csproj">
+      <Project>{377a6ee2-fa8c-4d54-b818-9941ffec7721}</Project>
+      <Name>DataScriptr.Library</Name>
     </ProjectReference>
     <ProjectReference Include="..\MVVMBase\MVVMBase.csproj">
       <Project>{69856dcc-b068-4f49-b236-6126a3f23f09}</Project>

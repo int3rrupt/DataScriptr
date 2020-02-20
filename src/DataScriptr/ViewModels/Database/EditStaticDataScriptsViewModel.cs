@@ -1,6 +1,6 @@
-﻿using DatabaseDevelopment;
-using DatabaseDevelopment.Enums;
-using DatabaseDevelopment.Models.Scripting;
+﻿using DataScriptr.Library;
+using DataScriptr.Library.Enums;
+using DataScriptr.Library.Models.Scripting;
 using DataScriptr.Models.Exceptions;
 using MVVMBase;
 using System;

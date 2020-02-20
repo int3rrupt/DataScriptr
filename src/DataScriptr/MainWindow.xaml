@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DataScriptr"
         mc:Ignorable="d"
-        Title="J.A.R.V.I.S." Height="750" Width="1400" Icon="Views/DatabaseDevelopmentTool.ico" Background="White" 
+        Title="DataScriptr" Height="750" Width="1400" Icon="Views/DataScriptr.ico" Background="White" 
         Closing="Window_Closing">
     <Window.Resources>
         <Style x:Key="PrimaryNavigationButtons" TargetType="{x:Type Button}">
