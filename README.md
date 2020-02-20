@@ -1,7 +1,7 @@
-# Jarvis
-Jarvis was built as a way to manage static data files for automated database deployment with SqlPackage. Static data deployment is still in progress by Microsoft, and as yet is not supported.
+# DataScriptr
+DataScriptr was built as a way to manage static data files for automated database deployment with SqlPackage. Static data deployment is still in progress by Microsoft, and as yet is not supported.
 
-Jarvis parses static data files created using [generate-sql-merge](https://github.com/readyroll/generate-sql-merge/blob/master/master.dbo.sp_generate_merge.sql) and provides a nice interface for modifying the data. Some features include automatically detecting data types while editing, updating edit time stamps, and more. 
+DataScriptr parses static data files created using [generate-sql-merge](https://github.com/readyroll/generate-sql-merge/blob/master/master.dbo.sp_generate_merge.sql) and provides a nice interface for modifying the data. Some features include automatically detecting data types while editing, updating edit time stamps, and more. 
 
 ## Screenshot
 ![Edit Static Data](./documentation/Screenshots/EditStaticData.png)
