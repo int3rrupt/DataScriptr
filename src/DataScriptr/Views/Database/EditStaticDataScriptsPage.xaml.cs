@@ -22,5 +22,10 @@ namespace DataScriptr.Views.Database
         {
             var test = ((ViewModels.Database.EditStaticDataScriptsViewModel)this.DataContext).GridSelectedColumnLeft;
         }
+
+        private void DeleteRow_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

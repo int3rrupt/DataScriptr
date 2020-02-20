@@ -150,7 +150,8 @@
                             </DataGrid.RowValidationErrorTemplate>
                             <DataGrid.ContextMenu>
                                 <ContextMenu>
-                                    <MenuItem Header="Click Me" Click="MenuItem_Click" />
+                                    <MenuItem Header="Copy Row" Click="MenuItem_Click" />
+                                    <MenuItem Header="Delete Row" Click="DeleteRow_Click" />
                                 </ContextMenu>
                             </DataGrid.ContextMenu>
                         </DataGrid>

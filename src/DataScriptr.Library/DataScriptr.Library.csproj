@@ -4,6 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <VersionPrefix>0.1.0</VersionPrefix>
     <VersionSuffix>$(VersionSuffix)</VersionSuffix>
+    <Product>DataScriptr.Library</Product>
   </PropertyGroup>
 
   <ItemGroup>

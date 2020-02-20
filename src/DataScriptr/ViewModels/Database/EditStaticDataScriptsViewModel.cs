@@ -593,7 +593,7 @@ namespace DataScriptr.ViewModels.Database
             e.Row.Table.RowChanged -= DataTable_RowChanged;
             try
             {
-                if (e.Action == DataRowAction.Change)
+                if (e.Action == DataRowAction.Change && e.Row.Table.Columns.Contains("EditTS"))
                 {
                     e.Row["EditTS"] = editTS;
                 }
