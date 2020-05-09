@@ -188,22 +188,24 @@ namespace DataScriptr.Library
             {
                 List<string> warningMessages = new List<string>();
                 // Get first create statement
-                Match createRegexMatch = Regex.Match(statement, @"(?i)create[^;]+;");
+                string regexPattern = @"(?i)create[^;]+;?";
+                Match createRegexMatch = Regex.Match(statement, regexPattern);
                 if (!createRegexMatch.Success)
                 {
-                    throw new Exception("Unable to parse create statement.");
+                    throw new SqlScriptParsingException($"Unable to parse create statement. Regex: {regexPattern}", statement);
                 }
                 // Get create statement parts
-                Match tableCreateRegexMatch = Regex.Match(createRegexMatch.Value, @"(?i)create[\s]+table[\s]+(?<TableSchema>[^.]+).(?<TableName>[^\s]+)\s*\((?<ColumnDefinitions>(?:.|\s)+)\);");
+                regexPattern = @"(?i)create[\s]+table[\s]+(?<TableSchema>[^.]+).(?<TableName>[^\s]+)\s*\((?<ColumnDefinitions>(?:.|\s)+)\);?";
+                Match tableCreateRegexMatch = Regex.Match(createRegexMatch.Value, regexPattern);
                 if (!tableCreateRegexMatch.Success)
                 {
-                    throw new SqlScriptParsingException("Unable to parse table create statement.");
+                    throw new SqlScriptParsingException($"Unable to parse table create statement. Regex: {regexPattern}", createRegexMatch.Value);
                 }
                 // Get table schema
                 Group matchSearch = tableCreateRegexMatch.Groups["TableSchema"];
                 if (!matchSearch.Success)
                 {
-                    throw new SqlScriptParsingException("Unable to parse table create statement - TableSchema.");
+                    throw new SqlScriptParsingException($"Unable to parse table create statement - TableSchema. Regex: {regexPattern}", createRegexMatch.Value);
                 }
                 string tableSchema = matchSearch.Value;
                 tableSchema = tableSchema.Replace("[", "").Replace("]", "");
@@ -211,7 +213,7 @@ namespace DataScriptr.Library
                 matchSearch = tableCreateRegexMatch.Groups["TableName"];
                 if (!matchSearch.Success)
                 {
-                    throw new SqlScriptParsingException("Unable to parse table create statement - TableName.");
+                    throw new SqlScriptParsingException($"Unable to parse table create statement - TableName. Regex: {regexPattern}", createRegexMatch.Value);
                 }
                 string tableName = matchSearch.Value;
                 tableName = tableName.Replace("[", "").Replace("]", "");
@@ -219,17 +221,15 @@ namespace DataScriptr.Library
                 matchSearch = tableCreateRegexMatch.Groups["ColumnDefinitions"];
                 if (!matchSearch.Success)
                 {
-                    throw new SqlScriptParsingException("Unable to parse table create statement - ColumnDefinitions.");
+                    throw new SqlScriptParsingException($"Unable to parse table create statement - ColumnDefinitions. Regex: {regexPattern}", createRegexMatch.Value);
                 }
                 string columnDefinitionsReplaceNewLine = matchSearch.Value.Replace("\r\n", "\n");
                 // Get individual column definitions
-                //MatchCollection columnDefinitionRegexMatch = Regex.Matches(matchSearch.Value, @"(?i)(?:(?<ColumnDefinition>[\s]*(?<ColumnName>[\S]+)[\s]+(?<DataType>[a-z2_]+)[\s]*(?<Precision>\((?:max|[0-9]+|[0-9]+,[\s]+[0-9])\))?[\s]+(?<Nullability>null|not[\s]null)?,?(?<ColumnConstraint>primary[\s]key|unique)?,?)|(?<ColumnConstraintDefinition>[\s]*constraint[\s]+[\S]+[\s]+(?:(?:(?:primary[\s]+key|unique|)[\s]+(?:clustered|non[\s]clustered)[\s]*(?:\([^\)]+\))?)|(?:foreign[\s]+key[\s]+[\S]+[\s]+references[\s]+[\S]+[\s]+\([^\)]+\))),?))");
-                //MatchCollection columnDefinitionRegexMatch = Regex.Matches(matchSearch.Value, @"(?i)(?:(?<ColumnDefinition>[\s]*(?<ColumnName>(?!constraint)[\S]+)[\s]+(?<DataType>[\[a-z2_\]]+)[\s]*(?<Precision>\((?:max|[0-9]+|[0-9]+,[\s]+[0-9])\))?[\s]+(?<Nullability>null|not[\s]null)?,?(?<ColumnConstraint>primary[\s]key|unique)?,?)|(?<ColumnConstraintDefinition>[\s]*constraint[\s]+(?<ConstraintName>[\S]+)[\s]+(?:(?:(?:(?<ConstraintType>primary[\s]+key)|unique|)[\s]+(?:clustered|non[\s]clustered)[\s]*(?:\((?<ConstraintColumnNames>[^\)]+)\))?)|(?:foreign[\s]+key[\s]+[\S]+[\s]+references[\s]+[\S]+[\s]+\([^\)]+\))),?))");
-                //MatchCollection columnDefinitionRegexMatch = Regex.Matches(matchSearch.Value, @"(?i)(?:(?<ColumnDefinition>\[?(?<ColumnName>(?!constraint)[^\s,\]]+)\]?[\s]+(?:\[?(?<ColumnDataType>[a-z2_]+)\]?)[\s]*(?:\((?<ColumnDataTypePrecision>(?:max|[0-9]+|[0-9]+,[\s]+[0-9]))\))?[\s]+(?<ColumnConstraint>(?:constraint[\s]+[\S]+[\s]+(?:default[\s]+[\S]+)?))?[\s]*(?<ColumnIdentity>identity[\s]*(?:\([0-9]+,[\s]*[0-9]+\))?)?[\s]*(?<ColumnNotForReplication>not[\s]+for[\s]+replication)?[\s]*(?<ColumnNullability>null|not[\s]null)?,?(?<TableConstraint>primary[\s]key|unique)?,?)|(?<TableConstraintDefinition>constraint[\s]+\[?(?<TableConstraintName>[^\s\]]+)\]?[\s]+(?:(?<TableConstraintUnique>(?<TableConstraintUniqueType>primary[\s]+key|unique)[\s]+(?:clustered|non[\s]clustered)[\s]*(?:\((?<TableConstraintColumnNames>[^\)]+)\))?)|(?<TableConstraintForeignKey>foreign[\s]+key[\s]+[\S]+[\s]+references[\s]+[\S]+[\s]+\([^\)]+\))),?))");
-                MatchCollection columnDefinitionRegexMatch = Regex.Matches(columnDefinitionsReplaceNewLine, @"(?im)(?:(?<TableConstraintDefinition>^\s*(?:constraint\s+\[?(?<TableConstraintName>[^\s\]]+)\]?\s+)?(?:(?<TableConstraintUnique>(?<TableConstraintUniqueType>primary\s+key|unique)\s+(?:clustered|non\s*clustered)\s*(?:\((?<TableConstraintColumnNames>[^\)]+)\))?)|(?<TableConstraintForeignKey>foreign[\s]+key[\s]+[\S]+[\s]+references[\s]+[\S]+[\s]+\([^\)]+\))),?)|(?<ColumnDefinition>^\s*\[?(?<ColumnName>(?!constraint)[^\s,\]]+)\]?[\s]+(?:\[?(?<ColumnDataType>[a-z2_]+)\]?)[\s]*(?:\((?<ColumnDataTypePrecision>(?:max|[0-9]+|[0-9]+,[\s]+[0-9]))\))?[\s]+(?<ColumnConstraint>(?:constraint[\s]+[\S]+[\s]+(?:default[\s]+[\S]+)?))?[\s]*(?<ColumnIdentity>identity[\s]*(?:\([0-9]+,[\s]*[0-9]+\))?)?[\s]*(?<ColumnNotForReplication>not[\s]+for[\s]+replication)?[\s]*(?<ColumnNullability>null|not[\s]null)?,?\s*$(?<TableConstraint>primary[\s]key|unique)?,?))");
+                regexPattern = @"(?im)(?:(?<TableConstraintDefinition>^\s*(?:constraint\s+\[?(?<TableConstraintName>[^\s\]]+)\]?\s+)?(?:(?<TableConstraintUnique>(?<TableConstraintUniqueType>primary\s+key|unique)\s+(?:clustered|non\s*clustered)\s*(?:\((?<TableConstraintColumnNames>[^\)]+)\))?)|(?<TableConstraintForeignKey>foreign[\s]+key[\s]+[\S]+[\s]+references[\s]+[\S]+[\s]+\([^\)]+\))),?)|(?<ColumnDefinition>^\s*\[?(?<ColumnName>(?!constraint)[^\s,\]]+)\]?[\s]+(?:(?:\[?(?<ColumnDataType>[a-z2_]+)\]?)|(?:\[?(?<CustomColumnDataTypeSchema>[a-z2_]+)\]?.\[?(?<CustomColumnDataType>[a-z2_]+)\]?))[\s]*(?:\((?<ColumnDataTypePrecision>(?:max|[0-9]+|[0-9]+,[\s]+[0-9]))\))?[\s]+(?<ColumnConstraint>(?:constraint[\s]+[\S]+[\s]+(?:default[\s]+[\S]+)?))?[\s]*(?<ColumnIdentity>identity[\s]*(?:\([0-9]+,[\s]*[0-9]+\))?)?[\s]*(?<ColumnNotForReplication>not[\s]+for[\s]+replication)?[\s]*(?<ColumnRowGuidCol>rowguidcol\s*)?(?<ColumnNullability>null|not[\s]null)?,?\s*$(?<TableConstraint>primary[\s]key|unique)?,?))";
+                MatchCollection columnDefinitionRegexMatch = Regex.Matches(columnDefinitionsReplaceNewLine, regexPattern);
                 if (columnDefinitionRegexMatch.Count < 0)
                 {
-                    throw new SqlScriptParsingException("Unable to parse table create statement - individual column definitions.");
+                    throw new SqlScriptParsingException($"Unable to parse table create statement - individual column definitions. Regex: {regexPattern}", columnDefinitionsReplaceNewLine);
                 }
                 DataTable dataTable = new DataTable($"{tableSchema}.{tableName}");
                 DataColumn dataColumn;
@@ -247,14 +247,15 @@ namespace DataScriptr.Library
                             if (matchSearch.Success)
                             {
                                 List<DataColumn> primaryKeyColumns = new List<DataColumn>();
-                                MatchCollection primaryKeyColumnNameMatchCollection = Regex.Matches(matchSearch.Value, @"(?i)\[?(?<PrimaryKeyColumnName>[^\s\]]+)\]?[\s]+(?:asc|desc)");
+                                regexPattern = @"(?i)\[?(?<PrimaryKeyColumnName>[^\s\]]+)\]?[\s]+(?:asc|desc)";
+                                MatchCollection primaryKeyColumnNameMatchCollection = Regex.Matches(matchSearch.Value, regexPattern);
                                 foreach (Match primaryKeyColumnNameMatch in primaryKeyColumnNameMatchCollection)
                                 {
                                     // Get primary key column name
                                     matchSearch = primaryKeyColumnNameMatch.Groups["PrimaryKeyColumnName"];
                                     if (!matchSearch.Success)
                                     {
-                                        throw new SqlScriptParsingException("Unable to parse table primary key - ColumnName.");
+                                        throw new SqlScriptParsingException($"Unable to parse table primary key - ColumnName. Regex: {regexPattern}", primaryKeyColumnNameMatch.Value);
                                     }
                                     string primaryKeyColumnName = matchSearch.Value;
                                     primaryKeyColumns.Add(dataTable.Columns[primaryKeyColumnName]);
@@ -269,14 +270,16 @@ namespace DataScriptr.Library
                         matchSearch = definition.Groups["ColumnName"];
                         if (!matchSearch.Success)
                         {
-                            throw new SqlScriptParsingException("Unable to parse table create statement - individual column definitions - ColumnName.");
+                            throw new SqlScriptParsingException($"Unable to parse table create statement - individual column definitions - ColumnName. Regex: {regexPattern}", definition.Value);
                         }
                         string columnName = matchSearch.Value;
                         // Get data type
                         matchSearch = definition.Groups["ColumnDataType"];
                         if (!matchSearch.Success)
                         {
-                            throw new SqlScriptParsingException("Unable to parse table create statement - individual column definitions - DataType.");
+                            matchSearch = definition.Groups["CustomColumnDataType"];
+                            // TODO: Parse user defined types
+                            throw new SqlScriptParsingException($"Unable to parse table create statement - individual column definitions - DataType. Regex: {regexPattern}", definition.Value);
                         }
                         string dataType = matchSearch.Value;
                         // Get precision
@@ -322,7 +325,7 @@ namespace DataScriptr.Library
             }
             catch (Exception ex)
             {
-                throw new SqlScriptParsingException($"Message: {ex.Message}\r\nStack: {ex.StackTrace}\r\nScript: {statement}");
+                throw new SqlScriptParsingException("Unable to parse table create script.", statement, ex);
             }
         }
 
@@ -442,35 +445,36 @@ namespace DataScriptr.Library
                 bool printChanges = false;
                 if (!string.IsNullOrWhiteSpace(mergeStatement))
                 {
-                    string mergeStatementRegex = @"(?i)\s*merge\s+into\s+\[(?<TableSchema>[^\]]+)\]\.\[(?<TableName>[^\]]+)\]\s+as\s+\[target\]\s+using\s+\(\s*(?:(?:values\s+(?<TableRows>[\S\s]+))|(?<EmptyDataSet>select\s+[\S]+\s+from\s+\[[^\]]+\].\[[^\]]+\]\s+where\s+1\s+=\s+0\s*-- empty dataset))\s*\)\s*as\s+\[source\]\s+\((?<SourceColumnNames>[\S]+)\)\s+on\s+\((?:\[(?:target|source)\]\.\[[^\]]+\]\s+=\s+\[(?:target|source)\]\.\[[^\]]+\](?:\s+and\s+)?)+\)\s+(?<WhenMatched>when\s+matched\s+and\s*\(\s+(?:nullif\(\[(?:target|source)\]\.\[[^\]]+\],\s+\[(?:target|source)\]\.\[[^\]]+\](?:\s+collate sql_latin1_general_cp1_cs_as\s+)?\)\s+is\s+not\s+null(?:\s+or\s+)?)+\)\s+then\s+update\s+set\s+(?:\[target\].\[[^\]]+\]\s+=\s+\[source\].\[[^\]]+\](?:,\s+)?)+)\s*(?<WhenNotMatchedByTarget>when\s+not\s+matched\s+by\s+target\s+then\s+insert\((?:\[[^\]]+\],?)+\)\s+values\((?:\[source\].\[[^\]]+\],?)+\))\s*(?<WhenNotMatchedBySource>when\s+not\s+matched\s+by\s+source\s+then\s+delete)?\s*(?<Output>output\s+[^;]+)?;";
+                    string regexPattern = @"(?i)\s*merge\s+into\s+\[(?<TableSchema>[^\]]+)\]\.\[(?<TableName>[^\]]+)\]\s+as\s+\[target\]\s+using\s+\(\s*(?:(?:values\s+(?<TableRows>[\S\s]+))|(?<EmptyDataSet>select\s+[\S]+\s+from\s+\[[^\]]+\].\[[^\]]+\]\s+where\s+1\s+=\s+0\s*-- empty dataset\s*(?:\(source table contained no rows at time of MERGE generation\))?))\s*\)\s*as\s+\[source\]\s+\((?<SourceColumnNames>[\S]+)\)\s+on\s+\((?:\[(?:target|source)\]\.\[[^\]]+\]\s+=\s+\[(?:target|source)\]\.\[[^\]]+\](?:\s+and\s+)?)+\)\s+(?<WhenMatched>when\s+matched\s+and\s*\(\s+(?:nullif\(\[(?:target|source)\]\.\[[^\]]+\],\s+\[(?:target|source)\]\.\[[^\]]+\](?:\s+collate sql_latin1_general_cp1_cs_as\s+)?\)\s+is\s+not\s+null(?:\s+or\s+)?)+\)\s+then\s+update\s+set\s+(?:\[target\].\[[^\]]+\]\s+=\s+\[source\].\[[^\]]+\](?:,\s+)?)+)\s*(?<WhenNotMatchedByTarget>when\s+not\s+matched\s+by\s+target\s+then\s+insert\((?:\[[^\]]+\],?)+\)\s+values\((?:\[source\].\[[^\]]+\],?)+\))\s*(?<WhenNotMatchedBySource>when\s+not\s+matched\s+by\s+source\s+then\s+delete)?\s*(?<Output>output\s+[^;]+)?;";
                     // Get merge statement
-                    Match mergeRegexMatch = Regex.Match(mergeStatement, mergeStatementRegex);
+                    Match mergeRegexMatch = Regex.Match(mergeStatement, regexPattern);
                     if (!mergeRegexMatch.Success)
                     {
-                        throw new SqlScriptParsingException($"Unable to parse merge statement.{Environment.NewLine}Regex Used: {mergeStatementRegex}");
+                        throw new SqlScriptParsingException($"Unable to parse merge statement. Regex: {regexPattern}", mergeStatement);
                     }
                     // Get table schema
                     Group matchSearch = mergeRegexMatch.Groups["TableSchema"];
                     if (!matchSearch.Success)
                     {
-                        throw new SqlScriptParsingException("Unable to parse merge statement - TableSchema.");
+                        throw new SqlScriptParsingException($"Unable to parse merge statement - TableSchema. Regex: {regexPattern}", mergeRegexMatch.Value);
                     }
                     string tableSchema = matchSearch.Value;
                     // Get table name
                     matchSearch = mergeRegexMatch.Groups["TableName"];
                     if (!matchSearch.Success)
                     {
-                        throw new SqlScriptParsingException("Unable to parse merge statement - TableName.");
+                        throw new SqlScriptParsingException($"Unable to parse merge statement - TableName. Regex: {regexPattern}", mergeRegexMatch.Value);
                     }
                     string tableName = matchSearch.Value;
                     // Get column names
                     matchSearch = mergeRegexMatch.Groups["SourceColumnNames"];
                     if (!matchSearch.Success)
                     {
-                        throw new SqlScriptParsingException("Unable to parse merge statement - ColumnNames.");
+                        throw new SqlScriptParsingException($"Unable to parse merge statement - ColumnNames. Regex: {regexPattern}", mergeRegexMatch.Value);
                     }
                     // Create array of column names
-                    MatchCollection regexMatches = Regex.Matches(matchSearch.Value, @"\[(?<ColumnName>[^\]\[]+)\]");
+                    regexPattern = @"\[(?<ColumnName>[^\]\[]+)\]";
+                    MatchCollection regexMatches = Regex.Matches(matchSearch.Value, regexPattern);
                     string[] columnNames = new string[regexMatches.Count];
                     for (int i = 0; i < regexMatches.Count; i++)
                     {
@@ -490,12 +494,13 @@ namespace DataScriptr.Library
                         matchSearch = mergeRegexMatch.Groups["TableRows"];
                         if (!matchSearch.Success)
                         {
-                            throw new SqlScriptParsingException("Unable to parse merge statement - TableRows.");
+                            throw new SqlScriptParsingException($"Unable to parse merge statement - TableRows. Regex: {regexPattern}", mergeRegexMatch.Value);
                         }
                         // Get individual rows
                         //MatchCollection tableRowsRegexMatch = Regex.Matches(matchSearch.Value, @"(?i)[\s]*\((.+)\),?");
                         string rowsNewLineReplaced = matchSearch.Value.Replace("\r\n", "\n");
-                        MatchCollection tableRowsRegexMatch = Regex.Matches(rowsNewLineReplaced, @"(?:^\s*,?\(((?:.|\r|\n|\r\n)*?)\)\s*$)", RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                        regexPattern = @"(?:^\s*,?\(((?:.|\r|\n|\r\n)*?)\)\s*$)";
+                        MatchCollection tableRowsRegexMatch = Regex.Matches(rowsNewLineReplaced, regexPattern, RegexOptions.IgnoreCase | RegexOptions.Multiline);
                         //int mode = 0;
                         RowParserStateContext rowParser = new RowParserStateContext();
                         foreach (Match tableRowMatch in tableRowsRegexMatch)
@@ -532,7 +537,7 @@ namespace DataScriptr.Library
             }
             catch (Exception ex)
             {
-                throw new SqlScriptParsingException($"Message: {ex.Message}\r\nStack: {ex.StackTrace}\r\nScript: {mergeStatement}");
+                throw new SqlScriptParsingException("Failed to parse merge script.", mergeStatement, ex);
             }
         }
     }

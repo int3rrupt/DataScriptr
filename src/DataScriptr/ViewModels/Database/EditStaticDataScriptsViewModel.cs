@@ -132,7 +132,7 @@ namespace DataScriptr.ViewModels.Database
                         }
                         catch (Exception ex)
                         {
-                            this.ErrorsLeft = ex.Message;
+                            this.ErrorsLeft = ex.ToString();
                             throw new ValueSetException("An error occured. Check the Errors tab for more details.");
                         }
                     }
@@ -536,7 +536,15 @@ namespace DataScriptr.ViewModels.Database
                 catch (Exception ex)
                 {
                     containsErrors = true;
-                    mergeScriptParseResult = new MergeScriptParseResult(dataTable, false, false, new List<string> { $"Path: {dataScript.Path}\r\nException: {ex.Message}\r\nStack: {ex.StackTrace}" });
+                    mergeScriptParseResult = new MergeScriptParseResult(dataTable, false, false, new List<string> { $@"Path: {dataScript.Path}
+===================================================================================
+Exception
+===================================================================================
+{ex.Message}
+===================================================================================
+Stack
+===================================================================================
+{ex.ToString()}" });
                 }
                 mergeScriptParseResults.Add(dataScript.Environment, mergeScriptParseResult);
             }
